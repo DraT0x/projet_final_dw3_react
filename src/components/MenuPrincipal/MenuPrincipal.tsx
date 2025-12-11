@@ -12,13 +12,13 @@ interface IChanson {
 }
 
 interface IVinyle {
-  idVinyle: string;
+  _id: string;
   urlImage: string;
   titre: string;
   artiste: string;
   chansons: IChanson[];
   genres: string[];
-  dateParution: Date;
+  date_parution: Date;
   possession: boolean;
 }
 
@@ -30,10 +30,6 @@ function MenuPrincipal() {
       setListeVinyles(response.data.vinyles);
     });
   }, []);
-
-  const gererClic = (idVinyle: string) => {
-    console.log("Clicked on vinyl:", idVinyle);
-  };
 
   return (
     <Box sx={{ position: "relative", minHeight: "100vh" }}>
@@ -58,7 +54,7 @@ function MenuPrincipal() {
       </Box>
 
       {/* Content on top of background */}
-      <Box sx={{ position: "relative", zIndex: 1 }}>
+      <Box sx={{ position: "relative", zIndex: 0 }}>
         <BarreNavigation />
         <Grid
           container
@@ -68,17 +64,16 @@ function MenuPrincipal() {
           {listeVinyles &&
             listeVinyles.map((vinyle) => {
               return (
-                <Grid key={vinyle.idVinyle}>
+                <Grid key={vinyle._id}>
                   <Vinyle
-                    idVinyle={vinyle.idVinyle}
+                    _id={vinyle._id}
                     urlImage={vinyle.urlImage}
                     titre={vinyle.titre}
                     artiste={vinyle.artiste}
                     chansons={vinyle.chansons}
                     genres={vinyle.genres}
-                    dateParution={vinyle.dateParution}
+                    date_parution={vinyle.date_parution}
                     possession={vinyle.possession}
-                    handleOnClick={gererClic}
                   />
                 </Grid>
               );

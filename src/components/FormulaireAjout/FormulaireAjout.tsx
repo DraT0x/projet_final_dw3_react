@@ -1,15 +1,80 @@
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { LoginContext } from "../../contexts/LoginContext";
+import { useNavigate } from "react-router-dom";
+
+import axios from "axios";
+
 import { Box } from "@mui/material";
 
 import BarreNavigation from "../BarreNavigation";
 import Aurora from "../Aurora";
 
 function FormulaireAjout() {
+  // Vérifie si l'utilisateur est connecté
+  const navigate = useNavigate();
+  const { isLoggedIn, token } = useContext(LoginContext);
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate("/");
+    }
+  }, [isLoggedIn]);
+
+  // Formulaire D'Ajout
   const [urlImage, setUrlImage] = useState("");
   const [titre, setTitre] = useState("");
   const [artiste, setArtiste] = useState("");
-  // const [prixAchat, setPrixAchat] = useState(0);
-  // const [possession, setPossession] = useState(false);
+
+  const [chansons, setChansons] = useState<{ nom: string; duree: number }[]>(
+    []
+  );
+  const [nouvelleChanson, setNouvelleChanson] = useState("");
+
+  const [genres, setGenres] = useState<string[]>([]);
+  const [nouveauGenre, setNouveauGenre] = useState("");
+
+  const [prixAchat, /*setPrixAchat*/] = useState(0);
+  const [possession, setPossession] = useState(false);
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate("/login");
+    } else {
+      axios.post(
+        "https://vinylesapi-bke0b0evdcdqdwb2.canadacentral-01.azurewebsites.net/api/vinyles/",
+        {
+          vinyle: {
+            urlImage: urlImage,
+            titre: titre,
+            artiste: artiste,
+            chansons: chansons,
+            genres: genres,
+            date_parution: "1983-10-13T00:00:00.000Z",
+            prix_achat: prixAchat,
+            possession: possession,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      // .then(() => {
+
+      // });
+    }
+  }, []);
+
+  const ajouterChanson = () => {
+    if (nouvelleChanson.trim() === "") return;
+    setChansons([...chansons, { nom: nouvelleChanson, duree: 0 }]);
+    setNouvelleChanson("");
+  };
+
+  const ajouterGenre = () => {
+    if (nouveauGenre.trim() === "") return;
+    setGenres([...genres, nouveauGenre]);
+    setNouveauGenre("");
+  };
 
   return (
     <Box sx={{ position: "relative", minHeight: "100vh" }}>
@@ -48,29 +113,28 @@ function FormulaireAjout() {
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: "12px",
+            gap: "28px",
             background: "rgba(255, 255, 255, 0.1)",
             padding: "40px",
             borderRadius: "20px",
             border: "1px solid rgba(255, 255, 255, 0.2)",
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
           }}
         >
+          {/* TITRE CENTRÉ */}
           <h2
             style={{
               color: "#fff",
               fontSize: "28px",
+              textAlign: "center",
             }}
           >
             AJOUTER VINYLE
           </h2>
 
+          {/* URL */}
           <label
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              color: "#fff",
-            }}
+            style={{ display: "flex", flexDirection: "column", color: "#fff" }}
           >
             URL du cover de l'album
             <input
@@ -82,51 +146,13 @@ function FormulaireAjout() {
                 border: "2px solid rgba(255, 255, 255, 0.3)",
                 background: "rgba(255, 255, 255, 0.15)",
                 color: "#fff",
-                fontSize: "16px",
               }}
-              onFocus={(e) => (e.target.style.borderColor = "#26ff00")}
-              onBlur={(e) =>
-                (e.target.style.borderColor = "rgba(255, 255, 255, 0.3)")
-              }
             />
           </label>
 
+          {/* ARTISTE SOUS URL */}
           <label
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              color: "#fff",
-              fontWeight: "500",
-              gap: "8px",
-            }}
-          >
-            Titre de l'album
-            <input
-              value={titre}
-              onChange={(e) => setTitre(e.target.value)}
-              style={{
-                padding: "12px 16px",
-                borderRadius: "10px",
-                border: "2px solid rgba(255, 255, 255, 0.3)",
-                background: "rgba(255, 255, 255, 0.15)",
-                color: "#fff",
-                fontSize: "16px",
-              }}
-              onFocus={(e) => (e.target.style.borderColor = "#eeff00")}
-              onBlur={(e) =>
-                (e.target.style.borderColor = "rgba(255, 255, 255, 0.3)")
-              }
-            />
-          </label>
-
-          <label
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              color: "#fff",
-              fontWeight: "500",
-              gap: "8px",
-            }}
+            style={{ display: "flex", flexDirection: "column", color: "#fff" }}
           >
             Artiste qui a fait l'album
             <input
@@ -138,38 +164,151 @@ function FormulaireAjout() {
                 border: "2px solid rgba(255, 255, 255, 0.3)",
                 background: "rgba(255, 255, 255, 0.15)",
                 color: "#fff",
-                fontSize: "16px",
               }}
-              onFocus={(e) => (e.target.style.borderColor = "#ff6c26")}
-              onBlur={(e) =>
-                (e.target.style.borderColor = "rgba(255, 255, 255, 0.3)")
-              }
             />
           </label>
 
+          {/* TITRE CENTRÉ SOUS ARTISTE */}
+          <label
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              color: "#fff",
+              textAlign: "center",
+            }}
+          >
+            Titre de l'album
+            <input
+              value={titre}
+              onChange={(e) => setTitre(e.target.value)}
+              style={{
+                margin: "0 auto",
+                width: "60%",
+                padding: "12px 16px",
+                borderRadius: "10px",
+                border: "2px solid rgba(255, 255, 255, 0.3)",
+                background: "rgba(255, 255, 255, 0.15)",
+                color: "#fff",
+                fontSize: "16px",
+              }}
+            />
+          </label>
+
+          {/* ZONE GENRES + CHANSONS CÔTE À CÔTE */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "24px",
+              marginTop: "20px",
+            }}
+          >
+            {/* --- COLONNE CHANSONS --- */}
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+            >
+              <label style={{ display: "flex", flexDirection: "column", color: "#fff" }}>
+                Nom de la chanson
+                <input
+                  value={nouvelleChanson}
+                  onChange={(e) => setNouvelleChanson(e.target.value)}
+                  style={{
+                    padding: "12px 16px",
+                    borderRadius: "10px",
+                    border: "2px solid rgba(255, 255, 255, 0.3)",
+                    background: "rgba(255, 255, 255, 0.15)",
+                    color: "#fff",
+                  }}
+                />
+              </label>
+
+              <button
+                type="button"
+                onClick={ajouterChanson}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "10px",
+                  background: "linear-gradient(135deg, #ff6c26, #977296)",
+                  border: "none",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+              >
+                Ajouter chanson
+              </button>
+
+              <ul style={{ color: "white" }}>
+                {chansons.map((c, i) => (
+                  <li key={i}>{c.nom}</li>
+                ))}
+              </ul>
+            </div>
+
+            {/* --- COLONNE GENRES --- */}
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+            >
+              <label style={{ display: "flex", flexDirection: "column", color: "#fff" }}>
+                Genre
+                <input
+                  value={nouveauGenre}
+                  onChange={(e) => setNouveauGenre(e.target.value)}
+                  style={{
+                    padding: "12px 16px",
+                    borderRadius: "10px",
+                    border: "2px solid rgba(255, 255, 255, 0.3)",
+                    background: "rgba(255, 255, 255, 0.15)",
+                    color: "#fff",
+                  }}
+                />
+              </label>
+
+              <button
+                type="button"
+                onClick={ajouterGenre}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "10px",
+                  background: "linear-gradient(135deg, #ff6c26, #977296)",
+                  border: "none",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+              >
+                Ajouter genre
+              </button>
+
+              <ul style={{ color: "white" }}>
+                {genres.map((g, i) => (
+                  <li key={i}>{g}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Possession */}
           <label
             style={{
               display: "flex",
               alignItems: "center",
               color: "#fff",
-              fontWeight: "500",
-              gap: "12px",
-              cursor: "pointer",
+              gap: "10px",
+              marginTop: "20px",
             }}
           >
             <input
               type="checkbox"
-              name="possessionCheckbox"
+              checked={possession}
+              onChange={(e) => setPossession(e.target.checked)}
               style={{
                 width: "20px",
                 height: "20px",
-                cursor: "pointer",
-                accentColor: "#26ff00",
               }}
             />
             Album en votre possession ?
           </label>
 
+          {/* Submit */}
           <button
             type="submit"
             style={{
@@ -181,19 +320,7 @@ function FormulaireAjout() {
               fontSize: "18px",
               fontWeight: "bold",
               cursor: "pointer",
-              transition: "all 0.3s ease",
-              boxShadow: "0 4px 15px rgba(224, 147, 59, 0.3)",
-              marginTop: "10px",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow =
-                "0 6px 20px rgba(252, 183, 104, 0.5)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow =
-                "0 4px 15px rgba(224, 147, 59, 0.3)";
+              marginTop: "20px",
             }}
           >
             Soumettre le vinyle

@@ -23,15 +23,14 @@ interface IChanson {
 }
 
 interface IVinyleProps {
-  idVinyle: string;
+  _id: string;
   urlImage: string;
   titre: string;
   artiste: string;
   chansons: IChanson[];
   genres: string[];
-  dateParution: Date;
+  date_parution: Date;
   possession: boolean;
-  handleOnClick: (idVinyle: string) => void;
 }
 
 // Constants
@@ -75,7 +74,6 @@ function Vinyle(props: IVinyleProps) {
   const [dialogueOuvert, setDialogueOuvert] = useState(false);
 
   const handleOnClick = () => {
-    props.handleOnClick(props.idVinyle);
     setDialogueOuvert(true);
   };
 
@@ -310,19 +308,37 @@ function Vinyle(props: IVinyleProps) {
 }
 
 function VinyleDialog({ open, onClose, vinyle }: IVinyleDialogProps) {
-    const { isLoggedIn } = useContext(LoginContext);
+  const { isLoggedIn } = useContext(LoginContext);
   if (!vinyle) return null;
 
+  // Code Emprunté
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
+
+    if (seconds) return `${mins}:${secs.toString().padStart(2, "0")}`;
+    else return "Durée Non Trouvée";
+  };
+
+  const formatDate = (date: Date | string) => {
+    try {
+      const dateObj = typeof date === "string" ? new Date(date) : date;
+      return dateObj.toLocaleDateString("fr-CA", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch (error) {
+      return "Date inconnue";
+    }
   };
 
   const totalDuration = vinyle.chansons.reduce(
     (acc, chanson) => acc + chanson.duree,
     0
   );
+
+  // Fin du code emprunté
 
   return (
     <BootstrapDialog onClose={onClose} open={open}>
@@ -390,9 +406,9 @@ function VinyleDialog({ open, onClose, vinyle }: IVinyleDialogProps) {
               >
                 Date de parution
               </Typography>
-              <Typography
-                sx={{ color: "#F5E6D3", marginBottom: 2 }}
-              ></Typography>
+              <Typography sx={{ color: "#F5E6D3", marginBottom: 2 }}>
+                {formatDate(vinyle.date_parution)}
+              </Typography>
 
               <Typography
                 variant="body2"
@@ -524,7 +540,7 @@ function VinyleDialog({ open, onClose, vinyle }: IVinyleDialogProps) {
                     color: "#F5E6D3",
                     border: `1px solid rgba(54, 68, 160, 0.4)`,
                     fontWeight: "bold",
-                    marginRight: "25px"
+                    marginRight: "25px",
                   }}
                 >
                   Modifier
