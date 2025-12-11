@@ -9,12 +9,10 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
   Divider,
   IconButton,
   Typography,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
 import { styled } from "@mui/material/styles";
 
 import { LoginContext } from "../../contexts/LoginContext";
@@ -312,8 +310,8 @@ function Vinyle(props: IVinyleProps) {
 }
 
 function VinyleDialog({ open, onClose, vinyle }: IVinyleDialogProps) {
+    const { isLoggedIn } = useContext(LoginContext);
   if (!vinyle) return null;
-  const { isLoggedIn } = useContext(LoginContext);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

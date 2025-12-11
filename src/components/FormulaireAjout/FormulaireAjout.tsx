@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Box } from "@mui/material";
 
 import BarreNavigation from "../BarreNavigation";
@@ -8,8 +8,8 @@ function FormulaireAjout() {
   const [urlImage, setUrlImage] = useState("");
   const [titre, setTitre] = useState("");
   const [artiste, setArtiste] = useState("");
-  const [prixAchat, setPrixAchat] = useState(0);
-  const [possession, setPossession] = useState(false);
+  // const [prixAchat, setPrixAchat] = useState(0);
+  // const [possession, setPossession] = useState(false);
 
   return (
     <Box sx={{ position: "relative", minHeight: "100vh" }}>
