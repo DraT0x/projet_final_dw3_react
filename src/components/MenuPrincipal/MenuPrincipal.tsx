@@ -28,7 +28,6 @@ function MenuPrincipal() {
   useEffect(() => {
     axios.get("https://vinylesapi-bke0b0evdcdqdwb2.canadacentral-01.azurewebsites.net/api/vinyles/").then((response) => {
       setListeVinyles(response.data.vinyles);
-      console.log(response.data.vinyles);
     });
   }, []);
 
@@ -64,7 +63,7 @@ function MenuPrincipal() {
         <Grid
           container
           spacing={2}
-          sx={{ padding: 2, paddingTop: 28, justifyContent: "center" }}
+          sx={{ padding: 2, paddingTop: 12, justifyContent: "center" }}
         >
           {listeVinyles &&
             listeVinyles.map((vinyle) => {
