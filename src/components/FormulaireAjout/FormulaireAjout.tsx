@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import axios from "axios";
 
-import { Box } from "@mui/material";
+import { Box, Button, TextField, Typography } from "@mui/material";
 
 import BarreNavigation from "../BarreNavigation";
 import Aurora from "../Aurora";
@@ -15,29 +15,69 @@ function FormulaireAjout() {
   const { isLoggedIn, token } = useContext(LoginContext);
   useEffect(() => {
     if (!isLoggedIn) {
-      navigate("/");
+      navigate("/login");
     }
   }, [isLoggedIn]);
 
   // Formulaire D'Ajout
   const [urlImage, setUrlImage] = useState("");
-  const [titre, setTitre] = useState("");
   const [artiste, setArtiste] = useState("");
+  const [titre, setTitre] = useState("");
 
+  const [prixAchat, setPrixAchat] = useState(0);
+
+  const [dateParution, setDateParution] = useState(new Date());
+
+  const [nouvelleDuree, setNouvelleDuree] = useState("");
+  const [nouvelleChanson, setNouvelleChanson] = useState("");
   const [chansons, setChansons] = useState<{ nom: string; duree: number }[]>(
     []
   );
-  const [nouvelleChanson, setNouvelleChanson] = useState("");
 
   const [genres, setGenres] = useState<string[]>([]);
   const [nouveauGenre, setNouveauGenre] = useState("");
 
-  const [prixAchat, /*setPrixAchat*/] = useState(0);
   const [possession, setPossession] = useState(false);
-  useEffect(() => {
-    if (!isLoggedIn) {
-      navigate("/login");
-    } else {
+
+  interface ErreursFormulaire {
+    urlImage: string;
+    titre: string;
+    artiste: string;
+    chansons: string;
+    dateParution: string;
+    genre: string;
+  }
+
+  const [erreur, setErreurs] = useState<ErreursFormulaire>({
+    urlImage: "",
+    titre: "",
+    artiste: "",
+    chansons: "",
+    dateParution: "",
+    genre: "",
+  });
+
+  // Inspiré de : https://w3htmlschool.com/react-form-validation-and-error-handling-complete-beginners-guide-2025/
+  const validationFormulaire = () => {
+    let tempErreurs : Partial<ErreursFormulaire> = {}; // Utilisation de Partial pour que ce soit des champs optionnelles
+
+    if (!urlImage) tempErreurs.urlImage = "Url Image est requis";
+    if (!titre) tempErreurs.titre = "Titre de l'album est requis";
+    if (!artiste) tempErreurs.artiste = "Nom de l'artiste est requis";
+    if (!dateParution)
+      tempErreurs.dateParution = "La date de parution est requise";
+    if (chansons.length == 0)
+      tempErreurs.chansons = "Au moins 1 chanson est requise";
+    if (genres.length == 0) tempErreurs.genre = "Au moins 1 genre est requis";
+
+    setErreurs(tempErreurs as ErreursFormulaire); // ChatGPT m'a donné cette ligne
+    console.log(Object.keys(tempErreurs).length === 0);
+    return Object.keys(tempErreurs).length === 0;
+  };
+
+  const envoiVinyle = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (validationFormulaire()) {
       axios.post(
         "https://vinylesapi-bke0b0evdcdqdwb2.canadacentral-01.azurewebsites.net/api/vinyles/",
         {
@@ -47,7 +87,7 @@ function FormulaireAjout() {
             artiste: artiste,
             chansons: chansons,
             genres: genres,
-            date_parution: "1983-10-13T00:00:00.000Z",
+            date_parution: dateParution,
             prix_achat: prixAchat,
             possession: possession,
           },
@@ -57,17 +97,25 @@ function FormulaireAjout() {
             Authorization: `Bearer ${token}`,
           },
         }
-      );
-      // .then(() => {
-
-      // });
+      )
+      .then(() => {
+        navigate("/");
+       });
     }
-  }, []);
+  };
 
   const ajouterChanson = () => {
-    if (nouvelleChanson.trim() === "") return;
-    setChansons([...chansons, { nom: nouvelleChanson, duree: 0 }]);
-    setNouvelleChanson("");
+    if (nouvelleChanson.trim() && nouvelleDuree) {
+      const dureeEnSecondes = parseInt(nouvelleDuree);
+      if (!isNaN(dureeEnSecondes)) {
+        setChansons([
+          ...chansons,
+          { nom: nouvelleChanson.trim(), duree: dureeEnSecondes },
+        ]);
+        setNouvelleChanson("");
+        setNouvelleDuree("");
+      }
+    }
   };
 
   const ajouterGenre = () => {
@@ -120,6 +168,7 @@ function FormulaireAjout() {
             border: "1px solid rgba(255, 255, 255, 0.2)",
             boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
           }}
+          onSubmit={envoiVinyle}
         >
           {/* TITRE CENTRÉ */}
           <h2
@@ -136,7 +185,7 @@ function FormulaireAjout() {
           <label
             style={{ display: "flex", flexDirection: "column", color: "#fff" }}
           >
-            URL du cover de l'album
+            URL du cover de l'album*
             <input
               value={urlImage}
               onChange={(e) => setUrlImage(e.target.value)}
@@ -148,13 +197,16 @@ function FormulaireAjout() {
                 color: "#fff",
               }}
             />
+            {erreur.urlImage && (
+              <p style={{ color: "red" }}>{erreur.urlImage}</p>
+            )}
           </label>
 
-          {/* ARTISTE SOUS URL */}
+          {/* ARTISTE */}
           <label
             style={{ display: "flex", flexDirection: "column", color: "#fff" }}
           >
-            Artiste qui a fait l'album
+            Artiste qui a fait l'album*
             <input
               value={artiste}
               onChange={(e) => setArtiste(e.target.value)}
@@ -166,9 +218,29 @@ function FormulaireAjout() {
                 color: "#fff",
               }}
             />
+            {erreur.artiste && <p style={{ color: "red" }}>{erreur.artiste}</p>}
           </label>
 
-          {/* TITRE CENTRÉ SOUS ARTISTE */}
+          {/* TITRE*/}
+          <label
+            style={{ display: "flex", flexDirection: "column", color: "#fff" }}
+          >
+            Titre de l'album*
+            <input
+              value={titre}
+              onChange={(e) => setTitre(e.target.value)}
+              style={{
+                padding: "12px 16px",
+                borderRadius: "10px",
+                border: "2px solid rgba(255, 255, 255, 0.3)",
+                background: "rgba(255, 255, 255, 0.15)",
+                color: "#fff",
+              }}
+            />
+            {erreur.titre && <p style={{ color: "red" }}>{erreur.titre}</p>}
+          </label>
+
+          {/* PRIX */}
           <label
             style={{
               display: "flex",
@@ -177,10 +249,10 @@ function FormulaireAjout() {
               textAlign: "center",
             }}
           >
-            Titre de l'album
+            Prix de l'achat
             <input
-              value={titre}
-              onChange={(e) => setTitre(e.target.value)}
+              value={prixAchat}
+              onChange={(e) => setPrixAchat(parseFloat(e.target.value))}
               style={{
                 margin: "0 auto",
                 width: "60%",
@@ -194,96 +266,203 @@ function FormulaireAjout() {
             />
           </label>
 
-          {/* ZONE GENRES + CHANSONS CÔTE À CÔTE */}
-          <div
+          {/* DATE ALBUM*/}
+          <label
             style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "24px",
-              marginTop: "20px",
+              display: "flex",
+              flexDirection: "column",
+              color: "#fff",
+              textAlign: "center",
             }}
           >
-            {/* --- COLONNE CHANSONS --- */}
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
-            >
-              <label style={{ display: "flex", flexDirection: "column", color: "#fff" }}>
-                Nom de la chanson
-                <input
-                  value={nouvelleChanson}
-                  onChange={(e) => setNouvelleChanson(e.target.value)}
-                  style={{
-                    padding: "12px 16px",
-                    borderRadius: "10px",
-                    border: "2px solid rgba(255, 255, 255, 0.3)",
-                    background: "rgba(255, 255, 255, 0.15)",
-                    color: "#fff",
-                  }}
-                />
-              </label>
+            Date de Parution de l'album*
+            <TextField
+              type="date"
+              onChange={(e) => setDateParution(new Date(e.target.value))}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  color: "#F5E6D3",
+                  backgroundColor: "rgba(0, 0, 0, 0.2)",
+                  "& fieldset": {
+                    borderColor: "rgba(212, 165, 116, 0.3)",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "rgba(212, 165, 116, 0.5)",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#D4A574",
+                  },
+                },
+                "& .MuiInputLabel-root": {
+                  color: "#C4A57B",
+                },
+              }}
+            />
+            {erreur.dateParution && (
+              <p style={{ color: "red" }}>{erreur.dateParution}</p>
+            )}
+          </label>
 
-              <button
-                type="button"
+          {/* ZONE GENRES + CHANSONS CÔTE À CÔTE */}
+          {/* --- COLONNE CHANSONS --- */}
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
+            <Box sx={{ display: "flex", gap: 2, marginBottom: 2 }}>
+              <Box sx={{ flex: 1 }}>
+                <label
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    color: "#F5E6D3",
+                  }}
+                >
+                  Nom de la chanson*
+                  <input
+                    value={nouvelleChanson}
+                    onChange={(e) => setNouvelleChanson(e.target.value)}
+                    placeholder="Titre de la chanson"
+                    style={{
+                      padding: "12px 16px",
+                      borderRadius: "10px",
+                      border: "2px solid rgba(212, 165, 116, 0.3)",
+                      background: "rgba(0, 0, 0, 0.2)",
+                      color: "#F5E6D3",
+                    }}
+                  />
+                </label>
+              </Box>
+
+              <Box sx={{ width: 150 }}>
+                <label
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    color: "#F5E6D3",
+                  }}
+                >
+                  Durée (secondes)*
+                  <input
+                    type="number"
+                    value={nouvelleDuree}
+                    onChange={(e) => setNouvelleDuree(e.target.value)}
+                    placeholder="180"
+                    style={{
+                      padding: "12px 16px",
+                      borderRadius: "10px",
+                      border: "2px solid rgba(212, 165, 116, 0.3)",
+                      background: "rgba(0, 0, 0, 0.2)",
+                      color: "#F5E6D3",
+                    }}
+                  />
+                </label>
+              </Box>
+
+              <Button
                 onClick={ajouterChanson}
-                style={{
-                  padding: "10px 20px",
-                  borderRadius: "10px",
-                  background: "linear-gradient(135deg, #ff6c26, #977296)",
-                  border: "none",
-                  fontWeight: "bold",
-                  cursor: "pointer",
+                sx={{
+                  alignSelf: "flex-end",
+                  backgroundColor: "#D4A574",
+                  color: "#2A1810",
+                  "&:hover": { backgroundColor: "#C4A57B" },
                 }}
               >
-                Ajouter chanson
-              </button>
+                +
+              </Button>
+            </Box>
 
-              <ul style={{ color: "white" }}>
-                {chansons.map((c, i) => (
-                  <li key={i}>{c.nom}</li>
-                ))}
-              </ul>
-            </div>
-
-            {/* --- COLONNE GENRES --- */}
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
-            >
-              <label style={{ display: "flex", flexDirection: "column", color: "#fff" }}>
-                Genre
-                <input
-                  value={nouveauGenre}
-                  onChange={(e) => setNouveauGenre(e.target.value)}
-                  style={{
-                    padding: "12px 16px",
-                    borderRadius: "10px",
-                    border: "2px solid rgba(255, 255, 255, 0.3)",
-                    background: "rgba(255, 255, 255, 0.15)",
-                    color: "#fff",
+            {/* Liste des chansons ajoutées */}
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              {chansons.map((chanson, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: 1.5,
+                    backgroundColor: "rgba(212, 165, 116, 0.15)",
+                    borderRadius: 1,
+                    border: "1px solid rgba(212, 165, 116, 0.3)",
                   }}
-                />
-              </label>
+                >
+                  <Typography sx={{ color: "#F5E6D3" }}>
+                    {index + 1}. {chanson.nom}
+                  </Typography>
+                  <Typography sx={{ color: "#C4A57B" }}>
+                    {Math.floor(chanson.duree / 60)}:
+                    {(chanson.duree % 60).toString().padStart(2, "0")}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+            {erreur.chansons && (
+              <p style={{ color: "red" }}>{erreur.chansons}</p>
+            )}
+          </div>
 
-              <button
-                type="button"
+          {/* --- COLONNE GENRES --- */}
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
+            <Box sx={{ display: "flex", gap: 2, marginBottom: 2 }}>
+              <Box sx={{ flex: 1 }}>
+                <label
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    color: "#F5E6D3",
+                  }}
+                >
+                  Nom du genre*
+                  <input
+                    value={nouveauGenre}
+                    onChange={(e) => setNouveauGenre(e.target.value)}
+                    placeholder="Nom du genre"
+                    style={{
+                      padding: "12px 16px",
+                      borderRadius: "10px",
+                      border: "2px solid rgba(212, 165, 116, 0.3)",
+                      background: "rgba(0, 0, 0, 0.2)",
+                      color: "#F5E6D3",
+                    }}
+                  />
+                </label>
+              </Box>
+
+              <Button
                 onClick={ajouterGenre}
-                style={{
-                  padding: "10px 20px",
-                  borderRadius: "10px",
-                  background: "linear-gradient(135deg, #ff6c26, #977296)",
-                  border: "none",
-                  fontWeight: "bold",
-                  cursor: "pointer",
+                sx={{
+                  alignSelf: "flex-end",
+                  backgroundColor: "#D4A574",
+                  color: "#2A1810",
+                  "&:hover": { backgroundColor: "#C4A57B" },
                 }}
               >
-                Ajouter genre
-              </button>
+                +
+              </Button>
+            </Box>
 
-              <ul style={{ color: "white" }}>
-                {genres.map((g, i) => (
-                  <li key={i}>{g}</li>
-                ))}
-              </ul>
-            </div>
+            {/* Liste des genres ajoutées */}
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              {genres.map((genre, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: 1.5,
+                    backgroundColor: "rgba(212, 165, 116, 0.15)",
+                    borderRadius: 1,
+                    border: "1px solid rgba(212, 165, 116, 0.3)",
+                  }}
+                >
+                  <Typography sx={{ color: "#F5E6D3" }}>
+                    {index + 1}. {genre}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+            {erreur.genre && <p style={{ color: "red" }}>{erreur.genre}</p>}
           </div>
 
           {/* Possession */}
