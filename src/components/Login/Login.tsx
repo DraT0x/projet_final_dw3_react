@@ -11,13 +11,29 @@ import {
 } from "@mui/material";
 import Aurora from "../Aurora";
 
+// Inspiré de : https://www.webdevtutor.net/blog/typescript-random-hex-string
+function generateRandomHexString(length: number): string {
+  let resultat = "";
+  for (let i = 0; i < length; i++) {
+    resultat += Math.floor(Math.random() * 16).toString(16);
+  }
+  return resultat;
+}
+
 function Login() {
+  const [couleurAurora] = useState<[string, string, string]>(() => [
+    `#${generateRandomHexString(6)}`,
+    `#${generateRandomHexString(6)}`,
+    `#${generateRandomHexString(6)}`,
+  ]);
+
   const [courriel, setCourriel] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
   const [erreur, setErreur] = useState("");
-  const navigate = useNavigate();
-  const { login, isLoggedIn } = useContext(LoginContext);
 
+  const navigate = useNavigate();
+
+  const { login, isLoggedIn } = useContext(LoginContext);
   async function performLogin() {
     await login(courriel, motDePasse)
       .then((reussi) => {
@@ -50,11 +66,12 @@ function Login() {
           width: "100vw",
           height: "100vh",
           zIndex: 0,
+          backgroundColor: "#191919",
         }}
       >
         {/* Code de : https://www.reactbits.dev/backgrounds/aurora  */}
         <Aurora
-          colorStops={["#ff6c26", "#ff0d00", "#ff00fb"]}
+          colorStops={couleurAurora}
           blend={0.2}
           speed={0.5}
         />
@@ -107,7 +124,7 @@ function Login() {
                   textAlign: "center",
                 }}
               >
-                Bienvenue sur LA plateforme de vinyle ! 
+                Bienvenue sur LA plateforme de vinyle !
               </Typography>
             </Box>
 
@@ -127,7 +144,8 @@ function Login() {
                     textAlign: "center",
                   }}
                 >
-                  La connexion permet d'ajouter, modifier et supprimer des vinyles.
+                  La connexion permet d'ajouter, modifier et supprimer des
+                  vinyles.
                 </Typography>
 
                 <form onSubmit={handleSubmit}>

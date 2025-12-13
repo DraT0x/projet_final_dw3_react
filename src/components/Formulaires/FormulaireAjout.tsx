@@ -9,7 +9,16 @@ import { Box, Button, TextField, Typography } from "@mui/material";
 import BarreNavigation from "../BarreNavigation";
 import Aurora from "../Aurora";
 
-function FormulaireAjout() {
+// Inspiré de : https://www.webdevtutor.net/blog/typescript-random-hex-string
+function generateRandomHexString(length: number): string {
+  let resultat = "";
+  for (let i = 0; i < length; i++) {
+    resultat += Math.floor(Math.random() * 16).toString(16);
+  }
+  return resultat;
+}
+
+const FormulaireAjout = () => {
   // Vérifie si l'utilisateur est connecté
   const navigate = useNavigate();
   const { isLoggedIn, token } = useContext(LoginContext);
@@ -19,12 +28,18 @@ function FormulaireAjout() {
     }
   }, [isLoggedIn]);
 
+  const [couleurAurora] = useState<[string, string, string]>(() => [
+    `#${generateRandomHexString(6)}`,
+    `#${generateRandomHexString(6)}`,
+    `#${generateRandomHexString(6)}`,
+  ]);
+
   // Formulaire D'Ajout
   const [urlImage, setUrlImage] = useState("");
   const [artiste, setArtiste] = useState("");
   const [titre, setTitre] = useState("");
 
-  const [prixAchat, setPrixAchat] = useState(0);
+  const [prixAchat, setPrixAchat] = useState("");
 
   const [dateParution, setDateParution] = useState(new Date());
 
@@ -59,7 +74,7 @@ function FormulaireAjout() {
 
   // Inspiré de : https://w3htmlschool.com/react-form-validation-and-error-handling-complete-beginners-guide-2025/
   const validationFormulaire = () => {
-    let tempErreurs : Partial<ErreursFormulaire> = {}; // Utilisation de Partial pour que ce soit des champs optionnelles
+    let tempErreurs: Partial<ErreursFormulaire> = {}; // Utilisation de Partial pour que ce soit des champs optionnelles
 
     if (!urlImage) tempErreurs.urlImage = "Url Image est requis";
     if (!titre) tempErreurs.titre = "Titre de l'album est requis";
@@ -78,29 +93,30 @@ function FormulaireAjout() {
   const envoiVinyle = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (validationFormulaire()) {
-      axios.post(
-        "https://vinylesapi-bke0b0evdcdqdwb2.canadacentral-01.azurewebsites.net/api/vinyles/",
-        {
-          vinyle: {
-            urlImage: urlImage,
-            titre: titre,
-            artiste: artiste,
-            chansons: chansons,
-            genres: genres,
-            date_parution: dateParution,
-            prix_achat: prixAchat,
-            possession: possession,
+      axios
+        .post(
+          "https://vinylesapi-bke0b0evdcdqdwb2.canadacentral-01.azurewebsites.net/api/vinyles/",
+          {
+            vinyle: {
+              urlImage: urlImage,
+              titre: titre,
+              artiste: artiste,
+              chansons: chansons,
+              genres: genres,
+              date_parution: dateParution,
+              prix_achat: parseFloat(prixAchat),
+              possession: possession,
+            },
           },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      .then(() => {
-        navigate("/");
-       });
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+        .then(() => {
+          navigate("/");
+        });
     }
   };
 
@@ -135,14 +151,11 @@ function FormulaireAjout() {
           width: "100vw",
           height: "100vh",
           zIndex: 0,
+          backgroundColor: "#191919",
         }}
       >
         {/* Code de : https://www.reactbits.dev/backgrounds/aurora  */}
-        <Aurora
-          colorStops={["#ff6c26", "#ff0d00", "#ff00fb"]}
-          blend={0.2}
-          speed={0.5}
-        />
+        <Aurora colorStops={couleurAurora} blend={0.2} speed={0.5} />
         {/* Fin du code emprunté */}
       </Box>
 
@@ -252,7 +265,7 @@ function FormulaireAjout() {
             Prix de l'achat
             <input
               value={prixAchat}
-              onChange={(e) => setPrixAchat(parseFloat(e.target.value))}
+              onChange={(e) => setPrixAchat(e.target.value)}
               style={{
                 margin: "0 auto",
                 width: "60%",
@@ -508,6 +521,6 @@ function FormulaireAjout() {
       </Box>
     </Box>
   );
-}
+};
 
 export default FormulaireAjout;

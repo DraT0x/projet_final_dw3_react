@@ -1,2 +1,2 @@
-export * from './Vinyle';
-export { default, } from './Vinyle';
+export * from './VinyleCard';
+export { default, } from './VinyleCard';

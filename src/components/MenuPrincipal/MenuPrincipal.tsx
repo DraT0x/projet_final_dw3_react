@@ -11,7 +11,7 @@ interface IChanson {
   duree: number;
 }
 
-interface IVinyle {
+export interface IVinyleProps {
   _id: string;
   urlImage: string;
   titre: string;
@@ -19,16 +19,36 @@ interface IVinyle {
   chansons: IChanson[];
   genres: string[];
   date_parution: Date;
+  prix_achat: Number;
   possession: boolean;
 }
 
+// Inspiré de : https://www.webdevtutor.net/blog/typescript-random-hex-string
+function generateRandomHexString(length: number): string {
+  let resultat = "";
+  for (let i = 0; i < length; i++) {
+    resultat += Math.floor(Math.random() * 16).toString(16);
+  }
+  return resultat;
+}
+
 function MenuPrincipal() {
-  const [listeVinyles, setListeVinyles] = useState<IVinyle[]>([]);
+  const [listeVinyles, setListeVinyles] = useState<IVinyleProps[]>([]);
+
+  const [couleurAurora] = useState<[string, string, string]>(() => [
+    `#${generateRandomHexString(6)}`,
+    `#${generateRandomHexString(6)}`,
+    `#${generateRandomHexString(6)}`,
+  ]);
 
   useEffect(() => {
-    axios.get("https://vinylesapi-bke0b0evdcdqdwb2.canadacentral-01.azurewebsites.net/api/vinyles/").then((response) => {
-      setListeVinyles(response.data.vinyles);
-    });
+    axios
+      .get(
+        "https://vinylesapi-bke0b0evdcdqdwb2.canadacentral-01.azurewebsites.net/api/vinyles/"
+      )
+      .then((response) => {
+        setListeVinyles(response.data.vinyles);
+      });
   }, []);
 
   return (
@@ -42,11 +62,12 @@ function MenuPrincipal() {
           width: "100vw",
           height: "100vh",
           zIndex: 0,
+          backgroundColor: "#191919",
         }}
       >
         {/* Code de : https://www.reactbits.dev/backgrounds/aurora  */}
         <Aurora
-          colorStops={["#26ff00", "#eeff00", "#ff6c26"]}
+          colorStops={couleurAurora}
           blend={0.2}
           speed={0.5}
         />
@@ -59,7 +80,12 @@ function MenuPrincipal() {
         <Grid
           container
           spacing={2}
-          sx={{ padding: 2, paddingTop: 12, justifyContent: "center" }}
+          sx={{
+            padding: 2,
+            paddingTop: 12,
+            justifyContent: "center",
+            alignItems: "stretch",
+          }}
         >
           {listeVinyles &&
             listeVinyles.map((vinyle) => {
@@ -73,6 +99,7 @@ function MenuPrincipal() {
                     chansons={vinyle.chansons}
                     genres={vinyle.genres}
                     date_parution={vinyle.date_parution}
+                    prix_achat={vinyle.prix_achat}
                     possession={vinyle.possession}
                   />
                 </Grid>

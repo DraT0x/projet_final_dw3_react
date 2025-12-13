@@ -3,7 +3,9 @@ import "./App.css";
 import Login from "../Login/Login"
 import LoginProvider from "../../contexts/LoginContext";
 import MenuPrincipal from "../MenuPrincipal";
-import FormulaireAjout from "../FormulaireAjout";
+import FormulaireAjout from "../Formulaires/FormulaireAjout";
+import FormulaireModifier from "../Formulaires/FormulaireModifer"
+
 import BarreNavigation from "../BarreNavigation";
 
 function Modele() {
@@ -23,6 +25,7 @@ function App() {
           <Route path="/" element={<Modele />}>
             <Route index element={<MenuPrincipal />} />
             <Route path="/ajouter" element={<FormulaireAjout />} />
+            <Route path="/modifier" element={<FormulaireModifier/>}/>
             <Route path="/login" element={<Login />} />
           </Route>
         </Routes>
